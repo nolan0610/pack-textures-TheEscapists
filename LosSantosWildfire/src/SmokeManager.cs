@@ -13,7 +13,7 @@ namespace LosSantosWildfire
     internal sealed class SmokeManager
     {
         private const int UpdateIntervalMs = 2000;
-        private const float ColumnScale = 2.5f;     // ajustez si la colonne paraît trop petite / grosse
+        private const float ColumnScale = 1.0f;     // le panache est déjà énorme à 1.0 ; plus gros = risque de crash
         private const float ColumnHeightOffset = 5f;
 
         /// <summary>Emplacement du pool de colonnes (pré-alloué).</summary>

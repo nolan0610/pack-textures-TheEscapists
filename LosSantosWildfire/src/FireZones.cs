@@ -9,10 +9,12 @@ namespace LosSantosWildfire
         public readonly Vector3 Center;
         public readonly float Radius;
         public readonly int SiteCount;
+        public readonly bool Urban; // zone de ville : feux placés au niveau de la rue, pas sur les toits
         public bool Seeded; // vrai une fois que les foyers de la zone ont été générés
 
-        public FireZone(string name, float x, float y, float z, float radius, int siteCount)
+        public FireZone(string name, float x, float y, float z, float radius, int siteCount, bool urban = false)
         {
+            Urban = urban;
             Name = name;
             Center = new Vector3(x, y, z);
             Radius = radius;
@@ -47,6 +49,14 @@ namespace LosSantosWildfire
                 new FireZone("Paleto Bay",                      -250f, 6300f,  31f, 100f, 10),
                 new FireZone("Sandy Shores",                    1850f, 3700f,  33f, 110f,  8),
                 new FireZone("Mont Gordo",                      2850f, 5500f, 300f, 140f, 10),
+                // Zones urbaines : surtout utiles pour les colonnes de fumée vues de la ville.
+                new FireZone("Downtown (Pillbox Hill)",          100f, -800f,  31f,  80f,  8, true),
+                new FireZone("Rockford Hills",                  -820f, -150f,  38f,  90f,  8, true),
+                new FireZone("Vespucci",                       -1150f, -1250f,  5f,  80f,  8, true),
+                new FireZone("Davis",                            100f, -1700f, 29f,  90f,  8, true),
+                new FireZone("La Mesa",                          800f, -1100f, 27f,  80f,  8, true),
+                new FireZone("Del Perro",                      -1450f, -500f,  33f,  80f,  8, true),
+                new FireZone("Port de Los Santos",               900f, -2900f,  6f, 100f,  8, true),
             };
         }
     }

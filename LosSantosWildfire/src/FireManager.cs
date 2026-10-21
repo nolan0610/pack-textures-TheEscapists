@@ -34,6 +34,7 @@ namespace LosSantosWildfire
         public int FlameFx;   // 0 = à (re)créer, -1 = échec définitif, >0 = handle valide
         public int SmokeFx;   // idem (une fumée locale seulement sur un feu sur trois)
         public bool WantsSmoke;
+        public bool WantsFlame;
         public int StartedAt;
     }
 
@@ -50,7 +51,7 @@ namespace LosSantosWildfire
         private const float ZoneResetFactor = 3f;       // zones "réinitialisées" au-delà de 3 × rayon
         private const int ReigniteDelayMs = 180000;     // un foyer éteint peut repartir après 3 min
         private const int ExtinguishGraceMs = 4000;     // délai avant de tester si un feu est éteint
-        private const int RandomSpawnIntervalMs = 2000;
+        private const int RandomSpawnIntervalMs = 1000;
         private const float ExtinguishCheckRadius = 3f;
         private const float CleanupRadius = 6f;         // rayon d'extinction (inclut les feux enfants)
         private const int MaxGroundAttempts = 6;
@@ -177,11 +178,11 @@ namespace LosSantosWildfire
 
             // On vise ~1,5 × le nombre de feux actifs pour avoir un peu de réserve.
             int target = _maxActive + _maxActive / 2;
-            int toSpawn = Math.Min(2, target - burningNearby);
+            int toSpawn = Math.Min(6, target - burningNearby);
             for (int n = 0; n < toSpawn && _sites.Count < MaxSites; n++)
             {
                 double angle = _rng.NextDouble() * Math.PI * 2.0;
-                double dist = 25.0 + _rng.NextDouble() * Math.Max(1.0, r - 25.0);
+                double dist = 12.0 + _rng.NextDouble() * Math.Max(1.0, r - 12.0);
                 var pos = new Vector3(
                     player.X + (float)(Math.Cos(angle) * dist),
                     player.Y + (float)(Math.Sin(angle) * dist),
@@ -275,8 +276,14 @@ namespace LosSantosWildfire
             Vector3 pos = site.Position;
             // Feu de script réel. maxChildren limite la propagation native du moteur.
             slot.FireHandle = Function.Call<int>(Hash.START_SCRIPT_FIRE, pos.X, pos.Y, pos.Z, _config.MaxChildFires, false);
-            slot.FlameFx = _ptfx.StartLoopedAtCoord(_config.FlameAsset, _config.FlameEffect, pos, _profile.FlameScale);
-            slot.WantsSmoke = (_smokeCounter++ % 3) == 0;
+            // Le feu de script affiche déjà ses propres flammes : le ptfx "renfort" n'est mis
+            // que sur un feu sur deux, et la fumée locale sur un sur quatre (budget particules).
+            int n = _smokeCounter++;
+            slot.WantsFlame = (n % 2) == 0;
+            slot.WantsSmoke = (n % 4) == 0;
+            slot.FlameFx = slot.WantsFlame
+                ? _ptfx.StartLoopedAtCoord(_config.FlameAsset, _config.FlameEffect, pos, _profile.FlameScale)
+                : 0;
             slot.SmokeFx = slot.WantsSmoke
                 ? _ptfx.StartLoopedAtCoord(_config.FireSmokeAsset, _config.FireSmokeEffect, pos + new Vector3(0f, 0f, 1f), 1f)
                 : 0;
@@ -293,9 +300,19 @@ namespace LosSantosWildfire
         /// </summary>
         private bool ResolveGround(FireSite site, int now)
         {
+            // Zones de collines : on sonde depuis très haut. Ville, foyers aléatoires ou propagés :
+            // on sonde depuis juste au-dessus de la hauteur de référence (joueur, feu parent ou
+            // centre de zone), pour placer le feu au niveau de la rue et pas sur les toits.
+            bool fromSky = site.Zone != null && !site.Zone.Urban;
+            float probeZ = fromSky ? 1000f : site.Position.Z + 15f;
             var outZ = new OutputArgument();
             bool found = Function.Call<bool>(Hash.GET_GROUND_Z_FOR_3D_COORD,
-                site.Position.X, site.Position.Y, 1000f, outZ, false, false);
+                site.Position.X, site.Position.Y, probeZ, outZ, false, false);
+            if (!found && !fromSky)
+            {
+                found = Function.Call<bool>(Hash.GET_GROUND_Z_FOR_3D_COORD,
+                    site.Position.X, site.Position.Y, 1000f, outZ, false, false);
+            }
             if (!found)
             {
                 // Collision pas encore chargée : on réessaiera plus tard, dans la limite de MaxGroundAttempts.
@@ -326,7 +343,7 @@ namespace LosSantosWildfire
                 FireSlot s = _slots[i];
                 if (s.Site == null) continue;
 
-                if (s.FlameFx == 0 && _ptfx.EnsureLoaded(_config.FlameAsset))
+                if (s.WantsFlame && s.FlameFx == 0 && _ptfx.EnsureLoaded(_config.FlameAsset))
                 {
                     int h = _ptfx.StartLoopedAtCoord(_config.FlameAsset, _config.FlameEffect, s.Site.Position, _profile.FlameScale);
                     s.FlameFx = h != 0 ? h : -1; // -1 : nom d'effet invalide, on n'insiste pas
@@ -377,6 +394,7 @@ namespace LosSantosWildfire
 
             slot.FireHandle = 0;
             slot.WantsSmoke = false;
+            slot.WantsFlame = false;
             slot.Site.Slot = null;
             slot.Site = null;
             _activeCount--;

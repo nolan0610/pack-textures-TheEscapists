@@ -48,7 +48,18 @@ namespace LosSantosWildfire
         private void OnTick(object sender, EventArgs e)
         {
             if (!_enabled) return;
+            try
+            {
+                UpdateAll();
+            }
+            catch (Exception ex)
+            {
+                Fail("mise à jour", ex);
+            }
+        }
 
+        private void UpdateAll()
+        {
             Ped player = Game.Player.Character;
             if (player == null || !player.Exists()) return;
 
@@ -63,6 +74,29 @@ namespace LosSantosWildfire
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
+            try
+            {
+                HandleKey(e);
+            }
+            catch (Exception ex)
+            {
+                Fail("touche " + e.KeyCode, ex);
+            }
+        }
+
+        /// <summary>
+        /// En cas d'erreur : on note le détail dans le journal, on nettoie tout et on prévient le
+        /// joueur, au lieu de laisser des feux orphelins ou un script arrêté en silence.
+        /// </summary>
+        private void Fail(string where, Exception ex)
+        {
+            Log.Write("ERREUR (" + where + ") : " + ex);
+            try { Disable(false); } catch (Exception cleanup) { Log.Write("ERREUR (nettoyage) : " + cleanup); }
+            Notification.Show("~o~LosSantosWildfire~s~ : ~r~erreur~s~, mod coupé. Détails dans scripts\\LosSantosWildfire.log");
+        }
+
+        private void HandleKey(KeyEventArgs e)
+        {
             if (e.KeyCode == _config.ToggleKey)
             {
                 if (_enabled) Disable(true);
@@ -72,6 +106,7 @@ namespace LosSantosWildfire
             {
                 _intensity = (Intensity)(((int)_intensity + 1) % 3);
                 ApplyIntensity();
+                Log.Write("Intensité : " + _intensity);
                 Notification.Show("~o~LosSantosWildfire~s~ : intensité ~y~" + IntensityProfile.For(_intensity).Label
                     + (_enabled ? "" : "~s~ (mod désactivé)"));
             }
@@ -80,6 +115,7 @@ namespace LosSantosWildfire
         private void Enable(bool notify)
         {
             _enabled = true;
+            Log.Write("Activation (intensité " + _intensity + ")");
             ApplyIntensity();
             if (notify)
             {
@@ -92,6 +128,7 @@ namespace LosSantosWildfire
         private void Disable(bool notify)
         {
             _enabled = false;
+            Log.Write("Désactivation");
             _fires.Shutdown();
             _smoke.Shutdown();
             _emergency.Shutdown();

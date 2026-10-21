@@ -122,7 +122,7 @@ Autres timecycles à essayer : `nervousRON_fog`, `glasses_brown`, `NG_filmic04`.
 | `UpdateIntervalMs` | 1000 | 500 | 500 |
 | `MaxActivationsPerUpdate` | 2 | 4 | 6 |
 | `Spread / Enabled` | false | true | true |
-| `Ash` | false | true | true |
+| `Ash` | false | false (nom incertain) | à tester |
 
 Conseils :
 - Le plus coûteux, ce sont les **flammes ptfx et les feux enfants** : baissez d'abord `MaxFires` et `MaxChildFires`.

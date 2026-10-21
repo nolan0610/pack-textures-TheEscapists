@@ -52,8 +52,9 @@ namespace LosSantosWildfire
         {
             if (handle != 0 && Function.Call<bool>(Hash.DOES_PARTICLE_FX_LOOPED_EXIST, handle))
             {
+                // Uniquement STOP : enchaîner STOP puis REMOVE sur le même handle peut viser un
+                // effet déjà libéré par le moteur (source possible de crash).
                 Function.Call(Hash.STOP_PARTICLE_FX_LOOPED, handle, false);
-                Function.Call(Hash.REMOVE_PARTICLE_FX, handle, false);
             }
             handle = 0;
         }

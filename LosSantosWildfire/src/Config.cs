@@ -48,7 +48,7 @@ namespace LosSantosWildfire
                     return new IntensityProfile
                     {
                         Label = "Moyenne", FireMultiplier = 1.0f, SmokeMultiplier = 0.75f,
-                        TimecycleStrength = 0.6f, Weather = "SMOG", FlameScale = 1.1f,
+                        TimecycleStrength = 0.7f, Weather = "SMOG", FlameScale = 1.1f,
                         AshScale = 1.0f, SpreadChance = 0.5f
                     };
             }
@@ -94,7 +94,7 @@ namespace LosSantosWildfire
         // [Atmosphere]
         public bool AtmosphereEnabled = true;
         public string TimecycleModifier = "glasses_orange";
-        public bool AshEnabled = true;
+        public bool AshEnabled = false; // nom d'effet incertain : désactivé par défaut
 
         // [Emergency]
         public bool FirefightersEnabled = true;
