@@ -25,8 +25,8 @@ Une notification s'affiche à chaque changement. Les touches se modifient dans l
    - `LosSantosWildfire.ini`
 5. Lancer le jeu en **mode histoire** (jamais en GTA Online), puis appuyer sur **F10**.
 
-> Variante sans compilation : SHVDN compile aussi les `.cs` à la volée. Copier les 7 fichiers de
-> `src/` dans `scripts\` (avec le `.ini`) fonctionne, mais la DLL charge plus vite.
+> Utilisez bien la DLL : SHVDN compile chaque `.cs` séparément, donc copier les fichiers de `src/`
+> un par un dans `scripts\` ne fonctionnerait pas (les classes dépendent les unes des autres).
 
 ### Compiler
 
